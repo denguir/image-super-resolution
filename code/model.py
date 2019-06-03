@@ -11,13 +11,20 @@ from keras.layers import Lambda, Conv2D, Dropout, Dense, Flatten
 from keras.utils.generic_utils import get_custom_objects
 from utils import RGB2YCrCb, crop, psnr, normalize
 
-IMG_HR_DIR = '../DIV2K/DIV2K_HR'
-IMG_LR_DIR_2X = '../DIV2K/DIV2K_LR_bicubic_X2'
-IMG_LR_DIR_3X = '../DIV2K/DIV2K_LR_bicubic_X3'
+# IMG_HR_DIR = '../DIV2K/DIV2K_HR'
+# IMG_LR_DIR_2X = '../DIV2K/DIV2K_LR_bicubic_X2'
+# IMG_LR_DIR_3X = '../DIV2K/DIV2K_LR_bicubic_X3'
 
-TRAIN_IDS = '../DIV2K/train.txt'
-TEST_IDS = '../DIV2K/test.txt'
-VAL_IDS = '../DIV2K/val.txt'
+# TRAIN_IDS = '../DIV2K/train.txt'
+# TEST_IDS = '../DIV2K/test.txt'
+# VAL_IDS = '../DIV2K/val.txt'
+
+IMG_HR_DIR = '../DataSet/IMG_HR'
+IMG_LR_DIR_2X = '../DataSet/IMG_LR_X2'
+
+TRAIN_IDS = '../DataSet/train.txt'
+TEST_IDS = '../DataSet/test5.txt'
+VAL_IDS = '../DataSet/val.txt'
 
 IMG_SIZE_MAX = (648, 1116) # (H,W)
 IMG_SIZE = (32, 32)
@@ -43,24 +50,20 @@ def split_data(train_file, test_file, val_file):
         val_ids = [id.strip() for id in val_ids]
     return train_ids, test_ids, val_ids
 
-def load_HR_img(id):
-    imgRGB = cv2.imread(osp.join(IMG_HR_DIR, '%s.png' % id))
-    # imgYCC = RGB2YCrCb(imgRGB)
-    # imgYCC = imgYCC[:,:,0]
-    img = normalize(imgRGB)
-    return img #img[:,:, np.newaxis]
+def load_HR_img(id, folder=IMG_HR_DIR, ext='png'):
+    imgRGB = cv2.imread(osp.join(folder, '%s.%s' % (id, ext)))
+    imgYCC = RGB2YCrCb(imgRGB)
+    imgY = imgYCC[:,:,0]
+    img = normalize(imgY)
+    return img[:,:, np.newaxis]
 
-def load_LR_img(id, downscale=2):
-    if downscale == 3:
-        dir = IMG_LR_DIR_3X
-    else:
-        dir = IMG_LR_DIR_2X
-    imgRGB = cv2.imread(osp.join(dir, '%sx%s.png' % (id, downscale)))
+def load_LR_img(id, folder=IMG_LR_DIR_2X, ext='png', downscale=2):
+    imgRGB = cv2.imread(osp.join(folder, '%sx%s.%s' % (id, downscale, ext)))
     imgRGB = cv2.resize(imgRGB, None, fx=downscale, fy=downscale, interpolation=cv2.INTER_CUBIC)
-    # imgYCC = RGB2YCrCb(imgRGB)
-    # imgYCC = imgYCC[:,:,0]
-    img = normalize(imgRGB)
-    return img #img[:,:, np.newaxis]
+    imgYCC = RGB2YCrCb(imgRGB)
+    imgY = imgYCC[:,:,0]
+    img = normalize(imgY)
+    return img[:,:, np.newaxis]
 
 
 class DataGenerator(keras.utils.Sequence):
@@ -84,8 +87,8 @@ class DataGenerator(keras.utils.Sequence):
     
     def prepare_data(self, id, downscale):
         '''Crop the image by choosing a random window of observation'''
-        img_HR = load_HR_img(id)
-        img_LR = load_LR_img(id, downscale)
+        img_HR = load_HR_img(id, ext='bmp')
+        img_LR = load_LR_img(id, ext='bmp', downscale=downscale)
 
         marginx = img_HR.shape[0] - self.dim[0]
         marginy = img_HR.shape[1] - self.dim[1]
@@ -147,7 +150,7 @@ def build_model(params, checkpoint):
         model = Sequential()
         model.add(Conv2D(128, (9,9), padding='same', activation=tf.nn.relu, kernel_initializer='glorot_uniform',
             bias_initializer='zeros', input_shape=(*params['dim'], params['n_channels']), name='conv1'))
-        model.add(Conv2D(64, (3,3), padding='same', activation=tf.nn.relu, kernel_initializer='glorot_uniform',
+        model.add(Conv2D(64, (1,1), padding='same', activation=tf.nn.relu, kernel_initializer='glorot_uniform',
             bias_initializer='zeros', name='conv2'))
         model.add(Conv2D(params['n_channels'], (5,5), padding='same', kernel_initializer='glorot_uniform',
             bias_initializer='zeros', name='conv3'))
@@ -161,7 +164,7 @@ def predict_model(params, checkpoint):
         model = Sequential()
         model.add(Conv2D(128, (9,9), padding='same', activation=tf.nn.relu, kernel_initializer='glorot_uniform',
             bias_initializer='zeros', input_shape=(None, None, params['n_channels']), name='conv1'))
-        model.add(Conv2D(64, (3,3), padding='same', activation=tf.nn.relu, kernel_initializer='glorot_uniform',
+        model.add(Conv2D(64, (1,1), padding='same', activation=tf.nn.relu, kernel_initializer='glorot_uniform',
             bias_initializer='zeros', name='conv2'))
         model.add(Conv2D(params['n_channels'], (5,5), padding='same', kernel_initializer='glorot_uniform',
             bias_initializer='zeros', name='conv3'))
@@ -179,7 +182,7 @@ def train_model(model, train_gen, val_gen, save_path):
                                     verbose=1,
                                     save_best_only=True,
                                     mode='auto',
-                                    period=40)
+                                    period=400)
         callbacks_list = [checkpoint]
 
     model.compile(optimizer=Adam(lr=0.00003), loss='mean_squared_error')
@@ -189,7 +192,7 @@ def train_model(model, train_gen, val_gen, save_path):
                                   use_multiprocessing=True,
                                   workers=2,
                                   verbose=1,
-                                  epochs=400,
+                                  epochs=4000,
                                   callbacks=callbacks_list)
     return history
 
@@ -215,8 +218,8 @@ if __name__ == '__main__':
 
     # Load data generators
     params = {'dim': IMG_SIZE,
-              'batch_size': 64,
-              'n_channels': 3,
+              'batch_size': 1,
+              'n_channels': 1,
               'downscale': 2,
               'shuffle': True}
 
@@ -225,17 +228,15 @@ if __name__ == '__main__':
     test_generator = DataGenerator(test_ids, **params)
 
     # Design model
-    checkpoint = osp.join('weights', 'weights_Adam_32x32x3_RGB.120-0.00118.hdf5')
+    checkpoint = osp.join('weights', 'mehdi_RGB.320-0.00131.hdf5')
     try:
-        model = build_model(params, checkpoint)
+        model = build_model(params, None)
     except:
-        opt = get_custom_optimizer()
-        get_custom_objects().update({"LR_SGD": opt})
-        model = build_model(params, checkpoint)
+        print('Failed build model (check checkpoint compatibility)')
     model.summary()
 
     #Train model
-    save_path = osp.join('weights', 'weights_Adam_32x32x3_RGB.{epoch:02d}-{val_loss:.5f}.hdf5')
+    save_path = osp.join('weights', 'mehdi_Y.{epoch:02d}-{val_loss:.5f}.hdf5')
     train_results = train_model(model, train_generator, val_generator, save_path)
     plot_training(train_results)
 
