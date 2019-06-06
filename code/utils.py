@@ -1,3 +1,7 @@
+'''
+Some utility functions used for image processing
+'''
+
 import cv2
 import numpy as np
 import os

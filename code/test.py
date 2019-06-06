@@ -30,7 +30,7 @@ VAL_IDS = '../DIV2K/val.txt'
 # DOWNSCALE = 2 -> Use IMG_LR_DIR_2X folder in load_LR_img
 # DOWNSCALE = 3 ->  Use IMG_LR_DIR_2X folder in load_LR_img
 DOWNSCALE = 2 
-VISUALIZE = True
+VISUALIZE = False
 
 # Load test data:
 _, test_ids, _ = split_data(TRAIN_IDS, TEST_IDS, VAL_IDS)
@@ -44,14 +44,9 @@ params = {'dim': None,
 model = predict_model(params, None)
 
 # load model with a weigth file:
-modelname_mehdi_RGB = 'mehdi_RGB.320-0.00131.hdf5'
-modelname_mehdi_Y = 'mehdi_Y.2800-0.00084.hdf5'
-modelname_mehdi_Y_div2k = 'mehdi_Y.40-0.00075.hdf5'
-modelname_mehdi_Yx3 = 'mehdi_Y_x3.3200-0.00323.hdf5'
-modelname_mehdi_Y_small = 'mehdi_small_Y.2800-0.00115.hdf5'
-modelname_Y = 'weights_Adam_32x32.160-0.00074.hdf5'
-modelname_RGB = 'weights_Adam_32x32x3_RGB.120-0.00118.hdf5'
-modelname_RGB2 = 'weights_Adam_32x32x3_RGB.320-0.00087.hdf5'
+modelname_mehdi_Y = 'mehdi_Y.2800-0.00084.hdf5' # arch 2
+modelname_mehdi_Y_div2k = 'mehdi_Y.40-0.00075.hdf5' # arch 2
+modelname_mehdi_Y_small = 'mehdi_small_Y.2800-0.00115.hdf5' # arch 1
 
 model.load_weights(osp.join('weights', modelname_mehdi_Y_div2k))
 

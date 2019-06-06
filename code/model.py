@@ -156,11 +156,11 @@ def build_model(params, checkpoint):
     else:
         weight_init = keras.initializers.RandomNormal(mean=0.0, stddev=0.001, seed=None)
         model = Sequential()
-        model.add(Conv2D(128, (9,9), padding='same', activation=tf.nn.relu, kernel_initializer='glorot_uniform',
+        model.add(Conv2D(128, (9,9), padding='same', activation=tf.nn.relu, kernel_initializer=weight_init,
             bias_initializer='zeros', input_shape=(*params['dim'], params['n_channels']), name='conv1'))
-        model.add(Conv2D(64, (1,1), padding='same', activation=tf.nn.relu, kernel_initializer='glorot_uniform',
+        model.add(Conv2D(64, (1,1), padding='same', activation=tf.nn.relu, kernel_initializer=weight_init,
             bias_initializer='zeros', name='conv2'))
-        model.add(Conv2D(params['n_channels'], (5,5), padding='same', kernel_initializer='glorot_uniform',
+        model.add(Conv2D(params['n_channels'], (5,5), padding='same', kernel_initializer=weight_init,
             bias_initializer='zeros', name='conv3'))
     return model
     
@@ -171,11 +171,11 @@ def predict_model(params, checkpoint):
     else:
         weight_init = keras.initializers.RandomNormal(mean=0.0, stddev=0.001, seed=None)
         model = Sequential()
-        model.add(Conv2D(128, (9,9), padding='same', activation=tf.nn.relu, kernel_initializer='glorot_uniform',
+        model.add(Conv2D(128, (9,9), padding='same', activation=tf.nn.relu, kernel_initializer=weight_init,
             bias_initializer='zeros', input_shape=(None, None, params['n_channels']), name='conv1'))
-        model.add(Conv2D(64, (1,1), padding='same', activation=tf.nn.relu, kernel_initializer='glorot_uniform',
+        model.add(Conv2D(64, (1,1), padding='same', activation=tf.nn.relu, kernel_initializer=weight_init,
             bias_initializer='zeros', name='conv2'))
-        model.add(Conv2D(params['n_channels'], (5,5), padding='same', kernel_initializer='glorot_uniform',
+        model.add(Conv2D(params['n_channels'], (5,5), padding='same', kernel_initializer=weight_init,
             bias_initializer='zeros', name='conv3'))
     return model
 
@@ -186,17 +186,17 @@ def train_model(model, train_gen, val_gen, save_path):
                                     verbose=1,
                                     save_best_only=True,
                                     mode='auto',
-                                    period=20)
+                                    period=100)
         callbacks_list = [checkpoint]
 
-    model.compile(optimizer=Adam(lr=0.00003), loss='mean_squared_error')
+    model.compile(optimizer=Adam(lr=5e-4), loss='mean_squared_error')
 
     history = model.fit_generator(generator=train_gen,
                                   validation_data=val_gen,
                                   use_multiprocessing=True,
                                   workers=2,
                                   verbose=1,
-                                  epochs=200,
+                                  epochs=300,
                                   callbacks=callbacks_list)
     return history
 
