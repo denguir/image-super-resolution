@@ -3,34 +3,33 @@
 This code implements a Super Resolution Convolutional Neural Network (SRCNN) implemented by Chao Dong et al (see paper in docs/super_res_2.pdf)
 
 ## Folder Structure
-'''
-├── code
-│   ├── downscale.py
-│   ├── model.py
-│   ├── __pycache__
-│   ├── results
-│   ├── test.py
-│   ├── utils.py
-│   └── weights
-├── DataSet
-│   ├── IMG_HR
-│   ├── IMG_LR_X2
-│   ├── IMG_LR_X3
-│   ├── test14.txt
-│   ├── test5.txt
-│   ├── train.txt
-│   └── val.txt
-├── DIV2K
-│   ├── DIV2K_HR
-│   ├── DIV2K_LR_bicubic_X2
-│   ├── DIV2K_LR_bicubic_X3
-│   ├── test.txt
-│   ├── train.txt
-│   └── val.txt
-├── docs
-│   └── super_res_2.pdf
-└── README.md
-'''
+
+├── code  
+│   ├── downscale.py  
+│   ├── model.py  
+│   ├── results  
+│   ├── test.py  
+│   ├── utils.py  
+│   └── weights  
+├── DataSet  
+│   ├── IMG_HR  
+│   ├── IMG_LR_X2  
+│   ├── IMG_LR_X3  
+│   ├── test14.txt  
+│   ├── test5.txt  
+│   ├── train.txt  
+│   └── val.txt  
+├── DIV2K  
+│   ├── DIV2K_HR  
+│   ├── DIV2K_LR_bicubic_X2  
+│   ├── DIV2K_LR_bicubic_X3  
+│   ├── test.txt  
+│   ├── train.txt  
+│   └── val.txt  
+├── docs  
+│   └── super_res_2.pdf  
+└── README.md  
+
 ## Remark
 
 In this repository you will not find the folders DIV2K and DataSet which are simply composed by the image dataset that have been used to train the convolutional neural network, however you can find them both in the following links:
